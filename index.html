@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>داشبورد استخدام</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎯</text></svg>">
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- تقویم شمسی - استایل -->
+    <link rel="stylesheet" href="https://unpkg.com/kamadatepicker/dist/kamadatepicker.min.css">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+      :root {
+        --bg-body: #f1f5f9; /* gray-100 */
+      }
+      body.theme-indigo {
+        --color-primary-50: #eef2ff; --color-primary-100: #e0e7ff; --color-primary-200: #c7d2fe; --color-primary-300: #a5b4fc; --color-primary-400: #818cf8; --color-primary-500: #6366f1; --color-primary-600: #4f46e5; --color-primary-700: #4338ca; --color-primary-800: #3730a3; --color-primary-900: #312e81;
+      }
+      body.theme-blue {
+        --color-primary-50: #eff6ff; --color-primary-100: #dbeafe; --color-primary-200: #bfdbfe; --color-primary-300: #93c5fd; --color-primary-400: #60a5fa; --color-primary-500: #3b82f6; --color-primary-600: #2563eb; --color-primary-700: #1d4ed8; --color-primary-800: #1e40af; --color-primary-900: #1e3a8a;
+      }
+      body.theme-teal {
+        --color-primary-50: #f0fdfa; --color-primary-100: #ccfbf1; --color-primary-200: #99f6e4; --color-primary-300: #5eead4; --color-primary-400: #2dd4bf; --color-primary-500: #14b8a6; --color-primary-600: #0d9488; --color-primary-700: #0f766e; --color-primary-800: #115e59; --color-primary-900: #134e4a;
+      }
+      body.theme-rose {
+        --color-primary-50: #fff1f2; --color-primary-100: #ffe4e6; --color-primary-200: #fecdd3; --color-primary-300: #fda4af; --color-primary-400: #fb7185; --color-primary-500: #f43f5e; --color-primary-600: #e11d48; --color-primary-700: #be123c; --color-primary-800: #9f1239; --color-primary-900: #881337;
+      }
+      body {
+        font-family: 'Vazirmatn', sans-serif;
+        background-color: var(--bg-body);
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+      }
+      /* Custom styles for kamadatepicker */
+      .bd-main { 
+        border-color: var(--color-primary-600, #4f46e5) !important; 
+        z-index: 100 !important; /* Ensure picker is above modal */
+      }
+      .day.today .day-num {
+        background-color: var(--color-primary-600, #4f46e5) !important;
+        color: white !important;
+      }
+      .day.selected .day-num {
+        background-color: var(--color-primary-700, #4338ca) !important;
+        color: white !important;
+      }
+      /* Custom scrollbar for Kanban */
+      .kanban-cards::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      .kanban-cards::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 10px;
+      }
+      .kanban-cards::-webkit-scrollbar-thumb {
+        background: #94a3b8;
+        border-radius: 10px;
+      }
+      .kanban-cards::-webkit-scrollbar-thumb:hover {
+        background: #64748b;
+      }
+
+      /* Dialog animation */
+      dialog[open] {
+        animation: fadeIn 0.3s ease-out;
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; transform: scale(0.95); }
+        to { opacity: 1; transform: scale(1); }
+      }
+      dialog::backdrop {
+        background-color: rgba(0, 0, 0, 0.5);
+        animation: backdropFadeIn 0.3s ease-out;
+      }
+      @keyframes backdropFadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+
+      /* For KamaDatePicker component */
+      .date-input-container {
+        position: relative;
+      }
+      .date-input-icon {
+        position: absolute;
+        top: 50%;
+        left: 0.75rem; /* 12px */
+        transform: translateY(-50%);
+        pointer-events: none;
+        color: #9ca3af; /* gray-400 */
+      }
+      .date-input {
+        padding-left: 2.5rem; /* 40px */
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.1.1/",
+    "react": "https://esm.sh/react@^19.1.1",
+    "react-dom": "https://esm.sh/react-dom@^19.1.1",
+    "react-dom/": "https://esm.sh/react-dom@^19.1.1/",
+    "@dnd-kit/core": "https://esm.sh/@dnd-kit/core@^6.3.1",
+    "@dnd-kit/sortable": "https://esm.sh/@dnd-kit/sortable@^8.0.0",
+    "@google/genai": "https://esm.sh/@google/genai"
+  }
+}
+</script>
+</head>
+  <body class="text-gray-800">
+    <div id="root"></div>
+    <div id="modal-root"></div>
+    <div id="toast-root"></div>
+    
+    <!-- کتابخانه‌های لازم برای تقویم شمسی - اسکریپت‌ها -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" defer></script>
+    <script src="https://unpkg.com/persian-date@1.1.0/dist/persian-date.min.js" defer></script>
+    <script src="https://unpkg.com/kamadatepicker/dist/kamadatepicker.min.js" defer></script>
+    
+    <script type="module" src="./index.tsx"></script>
+  </body>
+</html>

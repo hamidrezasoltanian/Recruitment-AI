@@ -1,0 +1,6 @@
+{
+  "name": "Recruitment Dashboard- OCR Ai",
+  "description": "A comprehensive dashboard for managing the recruitment process, including a Kanban board for tracking candidates, a calendar for interviews, and an archive for past applicants. Built with React and Tailwind CSS.",
+  "requestFramePermissions": [],
+  "prompt": ""
+}
