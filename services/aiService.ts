@@ -1,13 +1,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Candidate } from "../types";
 
-// This will be replaced by a post-build script.
-const apiKey = "%%VITE_GOOGLE_AI_API_KEY%%";
-
-// As requested for debugging, logging the API key after placeholder replacement.
-console.log("API_KEY from build environment:", apiKey);
-
-
 // Helper to convert a File object to the format Google AI API expects
 const fileToGenerativePart = (file: File) => {
   return new Promise<{ inlineData: { mimeType: string, data: string } }>((resolve, reject) => {
@@ -31,28 +24,16 @@ const fileToGenerativePart = (file: File) => {
   });
 };
 
-// Helper function to check API key availability safely across the app
-export const isApiKeySet = (): boolean => {
-    // The placeholder will be replaced. If it's still the placeholder or empty, the key is not set.
-    return apiKey !== "%%VITE_GOOGLE_AI_API_KEY%%" && apiKey !== "";
-}
-
-const getAiInstance = () => {
-    if (!isApiKeySet()) {
-        throw new Error('کلید API برای Gemini تنظیم نشده است. لطفا از طریق تنظیمات برنامه، آن را بررسی کنید.');
-    }
-    return new GoogleGenAI({ apiKey: apiKey });
-}
 
 export const aiService = {
-  async parseResume(file: File): Promise<{name: string, email: string, phone: string}> {
+  async parseResume(apiKey: string, file: File): Promise<{name: string, email: string, phone: string}> {
     if (file.type !== 'application/pdf') {
         throw new Error('فقط فایل‌های PDF برای تحلیل رزومه پشتیبانی می‌شوند.');
     }
     
     try {
         const filePart = await fileToGenerativePart(file);
-        const ai = getAiInstance();
+        const ai = new GoogleGenAI({ apiKey });
         
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
@@ -84,14 +65,14 @@ export const aiService = {
     }
   },
 
-  async summarizeTestResult(file: File): Promise<string> {
+  async summarizeTestResult(apiKey: string, file: File): Promise<string> {
     if (file.type !== 'application/pdf') {
         throw new Error('فقط فایل‌های PDF برای خلاصه‌سازی پشتیبانی می‌شوند.');
     }
 
     try {
         const filePart = await fileToGenerativePart(file);
-        const ai = getAiInstance();
+        const ai = new GoogleGenAI({ apiKey });
         
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
@@ -115,9 +96,9 @@ export const aiService = {
     }
   },
 
-  async summarizeTestLink(testName: string, testUrl: string): Promise<string> {
+  async summarizeTestLink(apiKey: string, testName: string, testUrl: string): Promise<string> {
     try {
-        const ai = getAiInstance();
+        const ai = new GoogleGenAI({ apiKey });
         
         const prompt = `Based on the name and URL of the following psychological or skills test, provide a brief summary in Persian of what this test measures and its general purpose.
         IMPORTANT: Do not attempt to access the URL. Use your general knowledge. Start the response by acknowledging that you are analyzing the link's title, not its live content.
@@ -141,7 +122,7 @@ export const aiService = {
     }
   },
 
-  async getInsightsStream(candidates: Candidate[], question: string) {
+  async getInsightsStream(apiKey: string, candidates: Candidate[], question: string) {
     const simplifiedCandidates = candidates.map(c => ({
         id: c.id,
         position: c.position,
@@ -158,7 +139,7 @@ export const aiService = {
     تحلیل خود را به زبان فارسی ارائه دهید.`;
     
     try {
-        const ai = getAiInstance();
+        const ai = new GoogleGenAI({ apiKey });
         
         const responseStream = await ai.models.generateContentStream({
             model: 'gemini-2.5-flash',
@@ -176,9 +157,9 @@ export const aiService = {
     }
   },
 
-  async generateTemplateContent(prompt: string): Promise<string> {
+  async generateTemplateContent(apiKey: string, prompt: string): Promise<string> {
     try {
-      const ai = getAiInstance();
+      const ai = new GoogleGenAI({ apiKey });
       
       const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash',

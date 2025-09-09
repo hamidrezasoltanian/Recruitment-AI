@@ -5,7 +5,7 @@ import Modal from '../ui/Modal';
 import StarRating from '../ui/StarRating';
 import { useSettings } from '../../contexts/SettingsContext';
 import KamaDatePicker from '../ui/KamaDatePicker';
-import { aiService, isApiKeySet } from '../../services/aiService';
+import { aiService } from '../../services/aiService';
 import { useToast } from '../../contexts/ToastContext';
 
 interface AddEditCandidateModalProps {
@@ -17,7 +17,7 @@ interface AddEditCandidateModalProps {
 }
 
 const AddEditCandidateModal: React.FC<AddEditCandidateModalProps> = ({ isOpen, onClose, onSave, candidateToEdit, initialStage }) => {
-  const { sources, companyProfile, stages } = useSettings();
+  const { sources, companyProfile, stages, geminiApiKey } = useSettings();
   const { addToast } = useToast();
   const availableSources = sources.length > 0 ? sources : DEFAULT_SOURCES;
   const kanbanStages = stages.filter(s => s.id !== 'archived');
@@ -34,7 +34,7 @@ const AddEditCandidateModal: React.FC<AddEditCandidateModalProps> = ({ isOpen, o
   const [interviewTime, setInterviewTime] = useState('');
   const [resumeFile, setResumeFile] = useState<File | undefined>();
   const [isParsing, setIsParsing] = useState(false);
-  const apiKeySet = isApiKeySet();
+  const apiKeySet = !!geminiApiKey;
 
   useEffect(() => {
     if (candidateToEdit) {
@@ -93,11 +93,11 @@ const AddEditCandidateModal: React.FC<AddEditCandidateModalProps> = ({ isOpen, o
   };
 
   const handleParseResume = async () => {
-    if (!resumeFile) return;
+    if (!resumeFile || !geminiApiKey) return;
     setIsParsing(true);
     addToast('در حال تحلیل رزومه با هوش مصنوعی...', 'success');
     try {
-        const parsedData = await aiService.parseResume(resumeFile);
+        const parsedData = await aiService.parseResume(geminiApiKey, resumeFile);
         if (parsedData.name) setName(parsedData.name);
         if (parsedData.email) setEmail(parsedData.email);
         if (parsedData.phone) setPhone(parsedData.phone);

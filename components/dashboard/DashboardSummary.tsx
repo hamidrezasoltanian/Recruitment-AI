@@ -1,7 +1,7 @@
 import React from 'react';
 import { Candidate } from '../../types';
 import { UserIcon, CalendarIcon, BriefcaseIcon, SparklesIcon } from '../ui/Icons';
-import { isApiKeySet } from '../../services/aiService';
+import { useSettings } from '../../contexts/SettingsContext';
 
 interface DashboardSummaryProps {
   candidates: Candidate[];
@@ -32,8 +32,8 @@ const StatCard: React.FC<StatCardProps> = ({ icon, label, value, color, textColo
 
 
 const DashboardSummary: React.FC<DashboardSummaryProps> = ({ candidates, onOpenAiInsights }) => {
-    
-    const apiKeySet = isApiKeySet();
+    const { geminiApiKey } = useSettings();
+    const apiKeySet = !!geminiApiKey;
 
     const stats = React.useMemo(() => {
         const activeCandidates = candidates.filter(c => !['hired', 'rejected', 'archived'].includes(c.stage));

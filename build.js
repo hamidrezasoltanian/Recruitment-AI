@@ -26,22 +26,13 @@ async function build() {
       loader: { '.tsx': 'tsx' },
       define: { 
         'process.env.NODE_ENV': "'production'",
-        // We no longer define API_KEY here; it will be replaced post-build.
+        'process.env.API_KEY': JSON.stringify(apiKey),
         'process.env.APP_VERSION': JSON.stringify(appVersion),
       },
     });
     console.log('JavaScript bundled successfully.');
 
-    // 3. Post-process the bundle to replace the API key placeholder
-    const bundlePath = path.join(distDir, 'bundle.js');
-    let bundleContent = await fs.readFile(bundlePath, 'utf-8');
-    // Replace the placeholder "%%...%%" with the actual API key.
-    // JSON.stringify ensures the key is correctly formatted as a JavaScript string.
-    bundleContent = bundleContent.replace(/"%%VITE_GOOGLE_AI_API_KEY%%"/g, JSON.stringify(apiKey));
-    await fs.writeFile(bundlePath, bundleContent);
-    console.log('API key placeholder replaced in bundle.js.');
-
-    // 4. Read, modify, and write index.html
+    // 3. Read, modify, and write index.html
     let htmlContent = await fs.readFile('index.html', 'utf-8');
     
     // Remove importmap

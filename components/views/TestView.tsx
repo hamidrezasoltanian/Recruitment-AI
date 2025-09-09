@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useCandidates } from '../../contexts/CandidatesContext';
 import { useSettings } from '../../contexts/SettingsContext';
-import { TestResult, TestLibraryItem, Candidate } from '../../types';
+import { TestResult, TestLibraryItem } from '../../types';
 import { dbService } from '../../services/dbService';
 import { useToast } from '../../contexts/ToastContext';
 import SelectCandidateModal from '../modals/SelectCandidateModal';
 import TestSelectionModal from '../modals/TestSelectionModal';
-import { aiService, isApiKeySet } from '../../services/aiService';
+import { aiService } from '../../services/aiService';
 import { SparklesIcon } from '../ui/Icons';
 
 interface TestResultGroupProps {
@@ -17,6 +17,7 @@ interface TestResultGroupProps {
 
 const TestResultGroup: React.FC<TestResultGroupProps> = ({ test, result, candidateId }) => {
     const { updateTestResult } = useCandidates();
+    const { geminiApiKey } = useSettings();
     const { addToast } = useToast();
 
     const [score, setScore] = useState(result?.score || '');
@@ -24,7 +25,7 @@ const TestResultGroup: React.FC<TestResultGroupProps> = ({ test, result, candida
     const [status, setStatus] = useState(result?.status || 'not_sent');
     const [filePreview, setFilePreview] = useState<string | null>(null);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
-    const apiKeySet = isApiKeySet();
+    const apiKeySet = !!geminiApiKey;
 
     const testFileId = `${candidateId}_${test.id}`;
 
@@ -89,6 +90,7 @@ const TestResultGroup: React.FC<TestResultGroupProps> = ({ test, result, candida
     };
 
     const handleAnalyze = async () => {
+        if (!geminiApiKey) return;
         setIsAnalyzing(true);
         addToast('در حال تحلیل با هوش مصنوعی...', 'success');
         try {
@@ -96,9 +98,9 @@ const TestResultGroup: React.FC<TestResultGroupProps> = ({ test, result, candida
             if (result?.file) {
                 const file = await dbService.getTestFile(testFileId);
                 if (!file) throw new Error('فایل نتیجه آزمون یافت نشد.');
-                summary = await aiService.summarizeTestResult(file);
+                summary = await aiService.summarizeTestResult(geminiApiKey, file);
             } else {
-                summary = await aiService.summarizeTestLink(test.name, test.url);
+                summary = await aiService.summarizeTestLink(geminiApiKey, test.name, test.url);
             }
             await updateTestResult(candidateId, test.id, { aiSummary: summary });
             addToast('تحلیل با موفقیت ایجاد و ذخیره شد.', 'success');

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useAuth } from './contexts/AuthContext';
 import { useCandidates } from './contexts/CandidatesContext';
 import { Candidate, StageId, View, StageChangeInfo } from './types';
@@ -21,12 +21,13 @@ import ResumeViewerModal from './components/modals/ResumeViewerModal';
 import BulkCommunicationModal from './components/modals/BulkCommunicationModal';
 import AiInsightsModal from './components/modals/AiInsightsModal';
 import ChangePasswordModal from './components/modals/ChangePasswordModal';
-import { isApiKeySet } from './services/aiService';
+import { useSettings } from './contexts/SettingsContext';
 
 
 const App: React.FC = () => {
   const { user, isAuthLoading } = useAuth();
   const { candidates, addCandidate, updateCandidate, updateCandidateStage } = useCandidates();
+  const { geminiApiKey } = useSettings();
   const [activeView, setActiveView] = useState<View>('dashboard');
   
   // Modal States
@@ -51,12 +52,6 @@ const App: React.FC = () => {
   const [bulkCommConfig, setBulkCommConfig] = useState<{ isOpen: boolean; candidates: Candidate[] }>({ isOpen: false, candidates: [] });
   const [isAiInsightsModalOpen, setAiInsightsModalOpen] = useState(false);
   const [isChangePasswordModalOpen, setChangePasswordModalOpen] = useState(false);
-  const [isApiKeyMissing, setIsApiKeyMissing] = useState(false);
-  
-  useEffect(() => {
-    setIsApiKeyMissing(!isApiKeySet());
-  }, []);
-
 
   // State to auto-expand a candidate in TestView
   const [initialExpandedInTests, setInitialExpandedInTests] = useState<string | null>(null);
@@ -217,12 +212,12 @@ const App: React.FC = () => {
   }
 
   // A safe way to get the version, defaulting if not defined during build
-  const appVersion = process.env.APP_VERSION || '1.0.0';
+  const appVersion = process.env.APP_VERSION || '1.1.0';
 
   return (
     <>
       <div className="min-h-screen flex flex-col">
-        {isApiKeyMissing && (
+        {!geminiApiKey && (
             <div className="bg-yellow-400 border-b-2 border-yellow-500 text-yellow-900 p-3 text-center text-sm font-semibold">
                 ⚠️ کلید API برای Gemini پیکربندی نشده است. قابلیت‌های هوش مصنوعی غیرفعال هستند. لطفاً{' '}
                 <button onClick={() => setSettingsModalOpen(true)} className="underline font-bold hover:text-yellow-800">

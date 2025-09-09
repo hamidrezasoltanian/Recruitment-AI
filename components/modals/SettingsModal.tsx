@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import Modal from '../ui/Modal';
 import { useAuth } from '../../contexts/AuthContext';
-import { CompanyProfile, JobPosition, KanbanStage, Template, TestLibraryItem, UserWithPassword } from '../../types';
+// FIX: Imported TestLibraryItem to resolve type error.
+import { JobPosition, KanbanStage, Template, UserWithPassword, TestLibraryItem } from '../../types';
 import { useSettings } from '../../contexts/SettingsContext';
 import { useToast } from '../../contexts/ToastContext';
 import { useTemplates } from '../../contexts/TemplateContext';
-import { aiService, isApiKeySet } from '../../services/aiService';
+import { aiService } from '../../services/aiService';
 import { useCandidates } from '../../contexts/CandidatesContext';
 import { useTheme } from '../../contexts/ThemeContext';
 
@@ -253,7 +254,7 @@ const StageManagementPanel: React.FC = () => {
 
 const TemplateManagementPanel: React.FC = () => {
   const { templates, addTemplate, updateTemplate, deleteTemplate } = useTemplates();
-  const { stages } = useSettings();
+  const { stages, geminiApiKey } = useSettings();
   const [editingId, setEditingId] = useState<string | null | 'new'>(null);
   
   // Form state
@@ -264,7 +265,7 @@ const TemplateManagementPanel: React.FC = () => {
   
   const [isAiLoading, setIsAiLoading] = useState(false);
   const { addToast } = useToast();
-  const apiKeySet = isApiKeySet();
+  const apiKeySet = !!geminiApiKey;
 
   const handleAddNewClick = () => {
     setEditingId('new');
@@ -310,9 +311,13 @@ const TemplateManagementPanel: React.FC = () => {
           addToast("لطفا ابتدا یک نام یا هدف برای قالب مشخص کنید.", 'error');
           return;
       }
+      if (!geminiApiKey) {
+          addToast("کلید API تنظیم نشده است.", 'error');
+          return;
+      }
       setIsAiLoading(true);
       try {
-          const generatedContent = await aiService.generateTemplateContent(`ایجاد یک قالب ${type === 'email' ? 'ایمیل' : 'واتسپ'} برای: ${name}`);
+          const generatedContent = await aiService.generateTemplateContent(geminiApiKey, `ایجاد یک قالب ${type === 'email' ? 'ایمیل' : 'واتسپ'} برای: ${name}`);
           setContent(generatedContent);
       } catch (e: any) {
           addToast(e.message, 'error');
@@ -553,31 +558,56 @@ const CompanyProfilePanel: React.FC = () => {
 }
 
 const ApiKeyPanel: React.FC = () => {
-    const [isKeySet, setIsKeySet] = useState(false);
+    const { geminiApiKey, setGeminiApiKey } = useSettings();
+    const [localApiKey, setLocalApiKey] = useState(geminiApiKey || '');
 
+    const handleSave = () => {
+        setGeminiApiKey(localApiKey);
+    };
+
+    const handleClear = () => {
+        setLocalApiKey('');
+        setGeminiApiKey('');
+    };
+    
     useEffect(() => {
-        setIsKeySet(isApiKeySet());
-    }, []);
+        setLocalApiKey(geminiApiKey || '');
+    }, [geminiApiKey]);
 
     return (
-        <div className="p-4 bg-gray-50 rounded-lg">
+        <div className="p-4 bg-gray-50 rounded-lg max-w-2xl mx-auto">
             <h3 className="text-lg font-bold text-gray-800 mb-2">پیکربندی کلید API (Gemini)</h3>
             <div className="flex items-center gap-2 mb-4">
                 <p className="font-medium">وضعیت کلید:</p>
-                {isKeySet ? (
-                    <span className="px-3 py-1 text-sm font-semibold text-green-800 bg-green-200 rounded-full">فعال و پیکربندی شده</span>
+                {geminiApiKey ? (
+                    <span className="px-3 py-1 text-sm font-semibold text-green-800 bg-green-200 rounded-full">فعال</span>
                 ) : (
-                    <span className="px-3 py-1 text-sm font-semibold text-red-800 bg-red-200 rounded-full">پیکربندی نشده</span>
+                    <span className="px-3 py-1 text-sm font-semibold text-red-800 bg-red-200 rounded-full">تنظیم نشده</span>
                 )}
             </div>
-            <div className="space-y-2 text-sm text-gray-700">
-                <p><strong className="font-bold text-red-600">نکته امنیتی مهم:</strong> برای حفظ امنیت، کلید API هرگز نباید مستقیماً در رابط کاربری برنامه وارد شود.</p>
-                <p>روش صحیح و امن، تنظیم کلید به عنوان یک متغیر محیطی (Environment Variable) در محیطی است که برنامه در آن اجرا می‌شود.</p>
-                <p>لطفا از مدیر سیستم بخواهید متغیر محیطی با نام <code className="bg-gray-200 text-red-700 p-1 rounded font-mono">API_KEY</code> را با مقدار کلید Gemini شما تنظیم کند.</p>
-                 {!isKeySet && <p className="font-bold mt-2">تا زمانی که کلید پیکربندی نشود، قابلیت‌های هوش مصنوعی کار نخواهند کرد.</p>}
+            <div className="space-y-4">
+                <div>
+                    <label htmlFor="api-key-input" className="block text-sm font-medium text-gray-700">کلید API خود را وارد کنید</label>
+                    <input
+                        id="api-key-input"
+                        type="password"
+                        value={localApiKey}
+                        onChange={e => setLocalApiKey(e.target.value)}
+                        placeholder="کلید خود را اینجا وارد کنید..."
+                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"
+                    />
+                </div>
+                <div className="flex justify-end gap-2">
+                    <button onClick={handleClear} className="bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 text-sm">حذف کلید</button>
+                    <button onClick={handleSave} className="bg-[var(--color-primary-600)] text-white py-2 px-4 rounded-lg hover:bg-[var(--color-primary-700)] text-sm">ذخیره کلید</button>
+                </div>
+            </div>
+            <div className="mt-6 p-3 bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm rounded-md space-y-2">
+                <p><strong className="font-bold">مهم:</strong> این کلید فقط در حافظه مرورگر شما (localStorage) ذخیره می‌شود.</p>
+                <p>این روش برای استفاده در یک شبکه داخلی و امن مناسب است. هرگز این فایل را روی یک سرور عمومی قرار ندهید، زیرا کلید API شما ممکن است در معرض خطر قرار گیرد.</p>
             </div>
         </div>
-    )
+    );
 }
 
 const TestLibraryPanel: React.FC = () => {
@@ -774,7 +804,7 @@ interface SettingsModalProps {
 
 const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     type Tab = 'appearance' | 'profile' | 'stages' | 'users' | 'sources' | 'templates' | 'apiKey' | 'tests';
-    const [activeTab, setActiveTab] = useState<Tab>('appearance');
+    const [activeTab, setActiveTab] = useState<Tab>('apiKey');
 
     const tabClasses = (tabName: Tab) => 
         `whitespace-nowrap py-2 px-4 font-medium text-sm rounded-t-lg transition-colors cursor-pointer ${
@@ -788,6 +818,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
             <div className="w-full">
                 <div className="border-b border-gray-200">
                     <nav className="flex flex-wrap space-x-2 space-x-reverse">
+                        <button onClick={() => setActiveTab('apiKey')} className={tabClasses('apiKey')}>کلید API</button>
                         <button onClick={() => setActiveTab('appearance')} className={tabClasses('appearance')}>ظاهر برنامه</button>
                         <button onClick={() => setActiveTab('profile')} className={tabClasses('profile')}>پروفایل شرکت</button>
                         <button onClick={() => setActiveTab('stages')} className={tabClasses('stages')}>مراحل کانبان</button>
@@ -795,7 +826,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                         <button onClick={() => setActiveTab('templates')} className={tabClasses('templates')}>مدیریت قالب‌ها</button>
                         <button onClick={() => setActiveTab('users')} className={tabClasses('users')}>مدیریت کاربران</button>
                         <button onClick={() => setActiveTab('sources')} className={tabClasses('sources')}>مدیریت منابع</button>
-                        <button onClick={() => setActiveTab('apiKey')} className={tabClasses('apiKey')}>کلید API</button>
                     </nav>
                 </div>
                 <div className="pt-6 bg-white p-6 rounded-b-lg">

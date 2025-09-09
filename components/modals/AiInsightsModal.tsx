@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Modal from '../ui/Modal';
 import { useCandidates } from '../../contexts/CandidatesContext';
-import { aiService, isApiKeySet } from '../../services/aiService';
+import { aiService } from '../../services/aiService';
 import { useToast } from '../../contexts/ToastContext';
 import { SparklesIcon } from '../ui/Icons';
+import { useSettings } from '../../contexts/SettingsContext';
 
 interface AiInsightsModalProps {
   isOpen: boolean;
@@ -13,11 +14,12 @@ interface AiInsightsModalProps {
 const AiInsightsModal: React.FC<AiInsightsModalProps> = ({ isOpen, onClose }) => {
   const { candidates } = useCandidates();
   const { addToast } = useToast();
+  const { geminiApiKey } = useSettings();
   const [query, setQuery] = useState('');
   const [response, setResponse] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const responseEndRef = useRef<HTMLDivElement>(null);
-  const apiKeySet = isApiKeySet();
+  const apiKeySet = !!geminiApiKey;
 
   useEffect(() => {
     // Scroll to the bottom of the response as it streams in
@@ -35,13 +37,13 @@ const AiInsightsModal: React.FC<AiInsightsModalProps> = ({ isOpen, onClose }) =>
 
   const handleQuerySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!query.trim() || isLoading) return;
+    if (!query.trim() || isLoading || !geminiApiKey) return;
 
     setIsLoading(true);
     setResponse('');
 
     try {
-      const stream = await aiService.getInsightsStream(candidates, query);
+      const stream = await aiService.getInsightsStream(geminiApiKey, candidates, query);
       for await (const chunk of stream) {
         setResponse(prev => prev + chunk.text);
       }

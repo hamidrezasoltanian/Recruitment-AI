@@ -3,6 +3,8 @@ import { DEFAULT_SOURCES, SETTINGS_KEY_SOURCES, COMPANY_PROFILE_KEY, DEFAULT_COM
 import { CompanyProfile, JobPosition, KanbanStage, TestLibraryItem } from '../types';
 import { useToast } from './ToastContext';
 
+const GEMINI_API_KEY = 'gemini_api_key_v1';
+
 interface SettingsContextType {
   sources: string[];
   addSource: (source: string) => void;
@@ -21,6 +23,8 @@ interface SettingsContextType {
   addTest: (test: Omit<TestLibraryItem, 'id'>) => void;
   updateTest: (test: TestLibraryItem) => void;
   deleteTest: (id: string) => void;
+  geminiApiKey: string | null;
+  setGeminiApiKey: (key: string) => void;
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -74,6 +78,16 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
     }
   });
 
+  const [geminiApiKey, setGeminiApiKey] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem(GEMINI_API_KEY);
+    } catch (error) {
+      console.error("Failed to load Gemini API key from localStorage", error);
+      return null;
+    }
+  });
+
+
   useEffect(() => {
     localStorage.setItem(SETTINGS_KEY_SOURCES, JSON.stringify(sources));
   }, [sources]);
@@ -89,6 +103,19 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
   useEffect(() => {
     localStorage.setItem(TEST_LIBRARY_KEY, JSON.stringify(testLibrary));
   }, [testLibrary]);
+  
+  const handleSetGeminiApiKey = (key: string) => {
+    const trimmedKey = key.trim();
+    if (trimmedKey) {
+        setGeminiApiKey(trimmedKey);
+        localStorage.setItem(GEMINI_API_KEY, trimmedKey);
+        addToast('کلید API ذخیره و فعال شد.', 'success');
+    } else {
+        setGeminiApiKey(null);
+        localStorage.removeItem(GEMINI_API_KEY);
+        addToast('کلید API حذف شد.', 'success');
+    }
+  };
 
   const addSource = (source: string) => {
     const trimmedSource = source.trim();
@@ -207,7 +234,13 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
     addToast("آزمون حذف شد.", 'success');
   };
 
-  const value = { sources, addSource, deleteSource, stages, setStageOrder, addStage, updateStage, deleteStage, companyProfile, updateCompanyDetails, addJobPosition, updateJobPosition, deleteJobPosition, testLibrary, addTest, updateTest, deleteTest };
+  const value = { 
+      sources, addSource, deleteSource, 
+      stages, setStageOrder, addStage, updateStage, deleteStage, 
+      companyProfile, updateCompanyDetails, addJobPosition, updateJobPosition, deleteJobPosition, 
+      testLibrary, addTest, updateTest, deleteTest,
+      geminiApiKey, setGeminiApiKey: handleSetGeminiApiKey,
+  };
 
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;
 };
