@@ -29,18 +29,26 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [user, setUser] = useState<User | null>(null);
   const [users, setUsers] = useState<Record<string, UserWithPassword>>({});
   const [isAuthLoading, setAuthLoading] = useState(true);
+  const [authError, setAuthError] = useState<string | null>(null);
   const { addToast } = useToast();
 
   useEffect(() => {
     const initializeAuth = async () => {
       setAuthLoading(true);
-      await authService._ensureUsersLoaded();
-      setUsers(authService.getLoadedUsers());
-      const loggedInUser = authService.getCurrentUser();
-      if (loggedInUser) {
-        setUser(loggedInUser);
+      setAuthError(null);
+      try {
+        await authService._ensureUsersLoaded();
+        setUsers(authService.getLoadedUsers());
+        const loggedInUser = authService.getCurrentUser();
+        if (loggedInUser) {
+          setUser(loggedInUser);
+        }
+      } catch (e: any) {
+        setAuthError(e.message || 'An unexpected error occurred during application initialization.');
+        console.error("Authentication initialization failed:", e);
+      } finally {
+        setAuthLoading(false);
       }
-      setAuthLoading(false);
     };
     initializeAuth();
   }, []);
@@ -105,6 +113,23 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           addToast(e.message, 'error');
           throw e; // Re-throw to let modal know about the error
       }
+  }
+  
+  if (authError) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-red-50 text-red-800 p-4">
+        <div className="text-center max-w-2xl mx-auto">
+          <h1 className="text-2xl font-bold mb-4">خطای راه‌اندازی برنامه</h1>
+          <p className="bg-red-100 border border-red-200 p-3 rounded-md font-mono text-sm">{authError}</p>
+          <p className="mt-4 text-md text-red-700">
+            این خطا معمولاً زمانی رخ می‌دهد که برنامه از طریق یک اتصال ناامن (HTTP) اجرا می‌شود. قابلیت‌های رمزنگاری برای امنیت ورود به سیستم، نیازمند اتصال امن (HTTPS) هستند.
+          </p>
+           <p className="mt-2 text-sm text-gray-600">
+            لطفاً اطمینان حاصل کنید که برنامه را از طریق یک آدرس <code className="bg-gray-200 text-gray-800 p-1 rounded">https://</code> مشاهده می‌کنید، نه <code className="bg-gray-200 text-gray-800 p-1 rounded">http://</code>.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   const value = { user, users, login, logout, addUser, updateUser, deleteUser, changePassword, isAuthLoading };

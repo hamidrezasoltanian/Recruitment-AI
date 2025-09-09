@@ -5,9 +5,13 @@ const CURRENT_USER_KEY = 'recruitment_current_user';
 
 // Helper to hash passwords using SHA-256
 const hashPassword = async (password: string): Promise<string> => {
+  // The SubtleCrypto API is only available in secure contexts (HTTPS).
+  if (!window.crypto || !window.crypto.subtle) {
+    throw new Error('Web Crypto API (crypto.subtle) is not available. This feature requires a secure context (HTTPS).');
+  }
   const encoder = new TextEncoder();
   const data = encoder.encode(password);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashBuffer = await window.crypto.subtle.digest('SHA-256', data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 };
