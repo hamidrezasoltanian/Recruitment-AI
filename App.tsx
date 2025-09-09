@@ -21,6 +21,7 @@ import ResumeViewerModal from './components/modals/ResumeViewerModal';
 import BulkCommunicationModal from './components/modals/BulkCommunicationModal';
 import AiInsightsModal from './components/modals/AiInsightsModal';
 import ChangePasswordModal from './components/modals/ChangePasswordModal';
+import { isApiKeySet } from './services/aiService';
 
 
 const App: React.FC = () => {
@@ -53,18 +54,7 @@ const App: React.FC = () => {
   const [isApiKeyMissing, setIsApiKeyMissing] = useState(false);
   
   useEffect(() => {
-    let keyAvailable = false;
-    try {
-      // The build process replaces process.env.API_KEY.
-      // If it's not replaced or empty, the key is missing.
-      if (process.env.API_KEY) {
-        keyAvailable = true;
-      }
-    } catch (e) {
-      // process is not defined in dev mode without a bundler setting it.
-      keyAvailable = false;
-    }
-    setIsApiKeyMissing(!keyAvailable);
+    setIsApiKeyMissing(!isApiKeySet());
   }, []);
 
 

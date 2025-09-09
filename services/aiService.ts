@@ -1,9 +1,12 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Candidate } from "../types";
 
-// As requested for debugging, logging the API key passed during the build process.
-// Note: Using process.env.API_KEY as defined in your build.js script.
-console.log("API_KEY from build environment:", process.env.API_KEY);
+// This will be replaced by a post-build script.
+const apiKey = "%%VITE_GOOGLE_AI_API_KEY%%";
+
+// As requested for debugging, logging the API key after placeholder replacement.
+console.log("API_KEY from build environment:", apiKey);
+
 
 // Helper to convert a File object to the format Google AI API expects
 const fileToGenerativePart = (file: File) => {
@@ -30,21 +33,15 @@ const fileToGenerativePart = (file: File) => {
 
 // Helper function to check API key availability safely across the app
 export const isApiKeySet = (): boolean => {
-    try {
-        // The build process replaces process.env.API_KEY.
-        // If it's not replaced or is an empty string, the key is not set.
-        return !!process.env.API_KEY;
-    } catch (e) {
-        // process.env is not defined in environments without a build step
-        return false;
-    }
+    // The placeholder will be replaced. If it's still the placeholder or empty, the key is not set.
+    return apiKey !== "%%VITE_GOOGLE_AI_API_KEY%%" && apiKey !== "";
 }
 
 const getAiInstance = () => {
     if (!isApiKeySet()) {
         throw new Error('کلید API برای Gemini تنظیم نشده است. لطفا از طریق تنظیمات برنامه، آن را بررسی کنید.');
     }
-    return new GoogleGenAI({ apiKey: process.env.API_KEY });
+    return new GoogleGenAI({ apiKey: apiKey });
 }
 
 export const aiService = {
