@@ -59,11 +59,11 @@ const TestResultGroup: React.FC<TestResultGroupProps> = ({ test, result, candida
     }, [result]);
 
 
-    const handleSave = () => {
+    const handleSave = (newStatus?: TestResult['status']) => {
         const resultData: Partial<TestResult> = {
             score: score ? Number(score) : undefined,
             notes,
-            status,
+            status: newStatus || status,
         };
         updateTestResult(candidateId, test.id, resultData);
         // Toast is shown in context
@@ -131,7 +131,14 @@ const TestResultGroup: React.FC<TestResultGroupProps> = ({ test, result, candida
                 {/* Status */}
                 <div>
                     <label className="block text-sm font-medium text-gray-700">وضعیت</label>
-                    <select value={status} onChange={e => setStatus(e.target.value as TestResult['status'])} onBlur={handleSave} className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 sm:text-sm focus:outline-none focus:ring-[var(--color-primary-500)] focus:border-[var(--color-primary-500)] ${statusClasses[status]}`}>
+                    <select 
+                        value={status} 
+                        onChange={e => {
+                            const newStatus = e.target.value as TestResult['status'];
+                            setStatus(newStatus);
+                            handleSave(newStatus);
+                        }}
+                        className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 sm:text-sm focus:outline-none focus:ring-[var(--color-primary-500)] focus:border-[var(--color-primary-500)] ${statusClasses[status]}`}>
                         <option value="not_sent">{statusText.not_sent}</option>
                         <option value="pending">{statusText.pending}</option>
                         <option value="passed">{statusText.passed}</option>
@@ -143,7 +150,7 @@ const TestResultGroup: React.FC<TestResultGroupProps> = ({ test, result, candida
                 {/* Score */}
                 <div>
                     <label className="block text-sm font-medium text-gray-700">نمره</label>
-                    <input type="number" value={score} onChange={e => setScore(e.target.value)} onBlur={handleSave} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 sm:text-sm" />
+                    <input type="number" value={score} onChange={e => setScore(e.target.value)} onBlur={() => handleSave()} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 sm:text-sm" />
                 </div>
                 
                 {/* File Upload / Preview */}
@@ -165,13 +172,12 @@ const TestResultGroup: React.FC<TestResultGroupProps> = ({ test, result, candida
                      <button onClick={handleAnalyze} disabled={isAnalyzing} title="تحلیل با هوش مصنوعی" className="p-2 bg-purple-100 text-purple-700 rounded-md hover:bg-purple-200 disabled:opacity-50">
                        <SparklesIcon className="h-5 w-5"/>
                     </button>
-                    <button onClick={handleSave} className="bg-[var(--color-primary-600)] text-white py-2 px-6 rounded-lg hover:bg-[var(--color-primary-700)] text-sm">ذخیره</button>
                 </div>
 
                 {/* Notes */}
                 <div className="sm:col-span-2 lg:col-span-4">
                     <label className="block text-sm font-medium text-gray-700">یادداشت</label>
-                    <input type="text" value={notes} onChange={e => setNotes(e.target.value)} onBlur={handleSave} placeholder="تحلیل یا نکات کلیدی..." className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 sm:text-sm" />
+                    <input type="text" value={notes} onChange={e => setNotes(e.target.value)} onBlur={() => handleSave()} placeholder="تحلیل یا نکات کلیدی..." className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 sm:text-sm" />
                 </div>
             </div>
 
