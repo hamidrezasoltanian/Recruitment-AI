@@ -3,17 +3,19 @@ import { User, UserWithPassword } from '../types';
 const USERS_KEY = 'recruitment_users';
 const CURRENT_USER_KEY = 'recruitment_current_user';
 
-// Helper to hash passwords using SHA-256
+// Let TypeScript know about the global CryptoJS object from the script tag
+declare const CryptoJS: any;
+
+// Helper to hash passwords using SHA-256 from CryptoJS library
 const hashPassword = async (password: string): Promise<string> => {
-  // The SubtleCrypto API is only available in secure contexts (HTTPS).
-  if (!window.crypto || !window.crypto.subtle) {
-    throw new Error('Web Crypto API (crypto.subtle) is not available. This feature requires a secure context (HTTPS).');
-  }
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password);
-  const hashBuffer = await window.crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  // Use a promise to keep the async signature, even though CryptoJS is synchronous
+  return new Promise((resolve, reject) => {
+    if (typeof CryptoJS === 'undefined') {
+      return reject(new Error('CryptoJS library not loaded. Cannot hash password.'));
+    }
+    const hashedPassword = CryptoJS.SHA256(password).toString(CryptoJS.enc.Hex);
+    resolve(hashedPassword);
+  });
 };
 
 // This service is now designed to be initialized asynchronously.
