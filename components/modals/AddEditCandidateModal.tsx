@@ -5,7 +5,7 @@ import Modal from '../ui/Modal';
 import StarRating from '../ui/StarRating';
 import { useSettings } from '../../contexts/SettingsContext';
 import KamaDatePicker from '../ui/KamaDatePicker';
-import { aiService } from '../../services/aiService';
+import { aiService, isApiKeySet } from '../../services/aiService';
 import { useToast } from '../../contexts/ToastContext';
 
 interface AddEditCandidateModalProps {
@@ -34,6 +34,7 @@ const AddEditCandidateModal: React.FC<AddEditCandidateModalProps> = ({ isOpen, o
   const [interviewTime, setInterviewTime] = useState('');
   const [resumeFile, setResumeFile] = useState<File | undefined>();
   const [isParsing, setIsParsing] = useState(false);
+  const apiKeySet = isApiKeySet();
 
   useEffect(() => {
     if (candidateToEdit) {
@@ -163,7 +164,7 @@ const AddEditCandidateModal: React.FC<AddEditCandidateModalProps> = ({ isOpen, o
                 <label className="block text-sm font-medium text-gray-700">رزومه (PDF)</label>
                 <div className="mt-1 flex items-center gap-4">
                     <input ref={resumeInputRef} type="file" onChange={handleFileChange} accept=".pdf" className="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[var(--color-primary-50)] file:text-[var(--color-primary-700)] hover:file:bg-[var(--color-primary-100)]"/>
-                    <button type="button" onClick={handleParseResume} disabled={!resumeFile || isParsing} className="px-4 py-2 text-sm font-semibold bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed">
+                    <button type="button" onClick={handleParseResume} disabled={!resumeFile || isParsing || !apiKeySet} title={!apiKeySet ? "ویژگی هوش مصنوعی غیرفعال است. لطفاً کلید API را تنظیم کنید." : "تکمیل خودکار با AI"} className="px-4 py-2 text-sm font-semibold bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed">
                         {isParsing ? 'در حال پردازش...' : 'تکمیل خودکار با AI ✨'}
                     </button>
                 </div>

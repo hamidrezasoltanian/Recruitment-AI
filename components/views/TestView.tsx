@@ -6,7 +6,7 @@ import { dbService } from '../../services/dbService';
 import { useToast } from '../../contexts/ToastContext';
 import SelectCandidateModal from '../modals/SelectCandidateModal';
 import TestSelectionModal from '../modals/TestSelectionModal';
-import { aiService } from '../../services/aiService';
+import { aiService, isApiKeySet } from '../../services/aiService';
 import { SparklesIcon } from '../ui/Icons';
 
 interface TestResultGroupProps {
@@ -24,6 +24,7 @@ const TestResultGroup: React.FC<TestResultGroupProps> = ({ test, result, candida
     const [status, setStatus] = useState(result?.status || 'not_sent');
     const [filePreview, setFilePreview] = useState<string | null>(null);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
+    const apiKeySet = isApiKeySet();
 
     const testFileId = `${candidateId}_${test.id}`;
 
@@ -169,7 +170,7 @@ const TestResultGroup: React.FC<TestResultGroupProps> = ({ test, result, candida
 
                 {/* Actions */}
                 <div className="flex items-end justify-end gap-2">
-                     <button onClick={handleAnalyze} disabled={isAnalyzing} title="تحلیل با هوش مصنوعی" className="p-2 bg-purple-100 text-purple-700 rounded-md hover:bg-purple-200 disabled:opacity-50">
+                     <button onClick={handleAnalyze} disabled={isAnalyzing || !apiKeySet} title={!apiKeySet ? "ویژگی هوش مصنوعی غیرفعال است. لطفاً کلید API را تنظیم کنید." : "تحلیل با هوش مصنوعی"} className="p-2 bg-purple-100 text-purple-700 rounded-md hover:bg-purple-200 disabled:opacity-50 disabled:cursor-not-allowed">
                        <SparklesIcon className="h-5 w-5"/>
                     </button>
                 </div>

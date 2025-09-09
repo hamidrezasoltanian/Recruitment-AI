@@ -1,6 +1,7 @@
 import React from 'react';
 import { Candidate } from '../../types';
 import { UserIcon, CalendarIcon, BriefcaseIcon, SparklesIcon } from '../ui/Icons';
+import { isApiKeySet } from '../../services/aiService';
 
 interface DashboardSummaryProps {
   candidates: Candidate[];
@@ -32,6 +33,8 @@ const StatCard: React.FC<StatCardProps> = ({ icon, label, value, color, textColo
 
 const DashboardSummary: React.FC<DashboardSummaryProps> = ({ candidates, onOpenAiInsights }) => {
     
+    const apiKeySet = isApiKeySet();
+
     const stats = React.useMemo(() => {
         const activeCandidates = candidates.filter(c => !['hired', 'rejected', 'archived'].includes(c.stage));
 
@@ -125,7 +128,7 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ candidates, onOpenA
             <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm">
                 <div className="flex flex-wrap justify-between items-center gap-4 mb-4">
                     <h3 className="text-lg font-bold text-gray-800">متقاضیان بر اساس منبع</h3>
-                    <button onClick={onOpenAiInsights} className="bg-purple-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2 text-sm">
+                    <button onClick={onOpenAiInsights} disabled={!apiKeySet} title={!apiKeySet ? "ویژگی هوش مصنوعی غیرفعال است. لطفاً کلید API را تنظیم کنید." : "تحلیل داده‌های استخدام با هوش مصنوعی"} className="bg-purple-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2 text-sm disabled:bg-gray-400 disabled:cursor-not-allowed">
                         <SparklesIcon className="h-5 w-5" />
                         <span>تحلیل با AI</span>
                     </button>

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Modal from '../ui/Modal';
 import { useCandidates } from '../../contexts/CandidatesContext';
-import { aiService } from '../../services/aiService';
+import { aiService, isApiKeySet } from '../../services/aiService';
 import { useToast } from '../../contexts/ToastContext';
 import { SparklesIcon } from '../ui/Icons';
 
@@ -17,6 +17,7 @@ const AiInsightsModal: React.FC<AiInsightsModalProps> = ({ isOpen, onClose }) =>
   const [response, setResponse] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const responseEndRef = useRef<HTMLDivElement>(null);
+  const apiKeySet = isApiKeySet();
 
   useEffect(() => {
     // Scroll to the bottom of the response as it streams in
@@ -73,7 +74,7 @@ const AiInsightsModal: React.FC<AiInsightsModalProps> = ({ isOpen, onClose }) =>
                     <p className="font-semibold mb-2">مثال:</p>
                     <ul className="space-y-2">
                        {exampleQueries.map((q, i) => (
-                           <li key={i}><button onClick={() => setQuery(q)} className="text-purple-600 hover:underline text-right">{q}</button></li>
+                           <li key={i}><button onClick={() => setQuery(q)} className="text-purple-600 hover:underline text-right" disabled={!apiKeySet}>{q}</button></li>
                        ))}
                     </ul>
                 </div>
@@ -89,13 +90,13 @@ const AiInsightsModal: React.FC<AiInsightsModalProps> = ({ isOpen, onClose }) =>
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="سوال خود را در مورد متقاضیان بپرسید..."
+              placeholder={apiKeySet ? "سوال خود را در مورد متقاضیان بپرسید..." : "ویژگی هوش مصنوعی غیرفعال است. لطفاً کلید API را تنظیم کنید."}
               className="flex-grow border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-[var(--color-primary-500)] focus:border-[var(--color-primary-500)] sm:text-sm"
-              disabled={isLoading}
+              disabled={isLoading || !apiKeySet}
             />
             <button
               type="submit"
-              disabled={isLoading || !query.trim()}
+              disabled={isLoading || !query.trim() || !apiKeySet}
               className="bg-[var(--color-primary-600)] text-white font-bold py-2 px-6 rounded-lg hover:bg-[var(--color-primary-700)] transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
               {isLoading ? '...' : 'ارسال'}

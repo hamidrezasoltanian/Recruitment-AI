@@ -24,8 +24,20 @@ const fileToGenerativePart = (file: File) => {
   });
 };
 
+// Helper function to check API key availability safely across the app
+export const isApiKeySet = (): boolean => {
+    try {
+        // The build process replaces process.env.API_KEY.
+        // If it's not replaced or is an empty string, the key is not set.
+        return !!process.env.API_KEY;
+    } catch (e) {
+        // process.env is not defined in environments without a build step
+        return false;
+    }
+}
+
 const getAiInstance = () => {
-    if (!process.env.API_KEY) {
+    if (!isApiKeySet()) {
         throw new Error('کلید API برای Gemini تنظیم نشده است. لطفا از طریق تنظیمات برنامه، آن را بررسی کنید.');
     }
     return new GoogleGenAI({ apiKey: process.env.API_KEY });

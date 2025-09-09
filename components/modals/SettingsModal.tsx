@@ -5,7 +5,7 @@ import { CompanyProfile, JobPosition, KanbanStage, Template, TestLibraryItem, Us
 import { useSettings } from '../../contexts/SettingsContext';
 import { useToast } from '../../contexts/ToastContext';
 import { useTemplates } from '../../contexts/TemplateContext';
-import { aiService } from '../../services/aiService';
+import { aiService, isApiKeySet } from '../../services/aiService';
 import { useCandidates } from '../../contexts/CandidatesContext';
 import { useTheme } from '../../contexts/ThemeContext';
 
@@ -264,6 +264,7 @@ const TemplateManagementPanel: React.FC = () => {
   
   const [isAiLoading, setIsAiLoading] = useState(false);
   const { addToast } = useToast();
+  const apiKeySet = isApiKeySet();
 
   const handleAddNewClick = () => {
     setEditingId('new');
@@ -390,7 +391,7 @@ const TemplateManagementPanel: React.FC = () => {
         <div>
            <div className="flex justify-between items-center">
               <label className="block text-sm font-medium text-gray-700">محتوای قالب</label>
-              <button onClick={handleGenerateWithAI} disabled={isAiLoading} className="text-sm text-[var(--color-primary-600)] hover:text-[var(--color-primary-800)] disabled:opacity-50">
+              <button onClick={handleGenerateWithAI} disabled={isAiLoading || !apiKeySet} title={!apiKeySet ? "ویژگی هوش مصنوعی غیرفعال است. لطفاً کلید API را تنظیم کنید." : "تولید محتوا با هوش مصنوعی"} className="text-sm text-[var(--color-primary-600)] hover:text-[var(--color-primary-800)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:text-[var(--color-primary-600)]">
                   {isAiLoading ? 'در حال پردازش...' : 'تولید با AI ✨'}
               </button>
            </div>
