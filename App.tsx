@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useAuth } from './contexts/AuthContext';
 import { useCandidates } from './contexts/CandidatesContext';
 import { Candidate, StageId, View, StageChangeInfo } from './types';
@@ -50,6 +50,22 @@ const App: React.FC = () => {
   const [bulkCommConfig, setBulkCommConfig] = useState<{ isOpen: boolean; candidates: Candidate[] }>({ isOpen: false, candidates: [] });
   const [isAiInsightsModalOpen, setAiInsightsModalOpen] = useState(false);
   const [isChangePasswordModalOpen, setChangePasswordModalOpen] = useState(false);
+  const [isApiKeyMissing, setIsApiKeyMissing] = useState(false);
+  
+  useEffect(() => {
+    let keyAvailable = false;
+    try {
+      // The build process replaces process.env.API_KEY.
+      // If it's not replaced or empty, the key is missing.
+      if (process.env.API_KEY) {
+        keyAvailable = true;
+      }
+    } catch (e) {
+      // process is not defined in dev mode without a bundler setting it.
+      keyAvailable = false;
+    }
+    setIsApiKeyMissing(!keyAvailable);
+  }, []);
 
 
   // State to auto-expand a candidate in TestView
@@ -216,6 +232,15 @@ const App: React.FC = () => {
   return (
     <>
       <div className="min-h-screen flex flex-col">
+        {isApiKeyMissing && (
+            <div className="bg-yellow-400 border-b-2 border-yellow-500 text-yellow-900 p-3 text-center text-sm font-semibold">
+                ⚠️ کلید API برای Gemini پیکربندی نشده است. قابلیت‌های هوش مصنوعی غیرفعال هستند. لطفاً{' '}
+                <button onClick={() => setSettingsModalOpen(true)} className="underline font-bold hover:text-yellow-800">
+                    تنظیمات
+                </button>
+                {' '}را برای راهنمایی بررسی کنید.
+            </div>
+        )}
         <Header 
           onSettingsClick={() => setSettingsModalOpen(true)} 
           onAddCandidateClick={() => handleOpenAddModal()}
