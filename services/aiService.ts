@@ -1,6 +1,10 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Candidate } from "../types";
 
+// As requested for debugging, logging the API key passed during the build process.
+// Note: Using process.env.API_KEY as defined in your build.js script.
+console.log("API_KEY from build environment:", process.env.API_KEY);
+
 // Helper to convert a File object to the format Google AI API expects
 const fileToGenerativePart = (file: File) => {
   return new Promise<{ inlineData: { mimeType: string, data: string } }>((resolve, reject) => {
